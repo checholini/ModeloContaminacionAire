@@ -36,25 +36,33 @@ public class XYSeriesDemo extends ApplicationFrame {
      */
     public XYSeriesDemo(final String titulo, int caso) {
         //Asigna un titulo a la ventana
-        super(titulo);
-        //CRea la serie que va a graficar
-        final XYSeries serieTiempo = createSeries("Contaminacion");
-        // Hace un wrap de la serie
-        final XYSeriesCollection data = new XYSeriesCollection(serieTiempo);
+        super(titulo);       
         // crea la grafica basado en los datos
         if (caso == 1) {
             // Anade la grafica a una ventana
+            final XYSeries serieTiempo = createSeries("Contaminacion");
+            final XYSeriesCollection data = new XYSeriesCollection(serieTiempo);
             final JFreeChart ventanaTiempo = createChart(data, 1);
             final ChartPanel chartPanelTiempo = new ChartPanel(ventanaTiempo);
             // Asigna un tamano a la ventana
             chartPanelTiempo.setPreferredSize(new java.awt.Dimension(800, 450));
             setContentPane(chartPanelTiempo);
-        } else {
-            final JFreeChart ventanaXY = createChart(data, 2);
-            final ChartPanel chartPanelXY = new ChartPanel(ventanaXY);
+        } else if (caso == 2){
+            final XYSeries serieX = createSeriesX("Contaminacion");
+            final XYSeriesCollection data = new XYSeriesCollection(serieX);
+            final JFreeChart ventanaX = createChart(data, 2);
+            final ChartPanel chartPanelX = new ChartPanel(ventanaX);
             // Asigna un tamano a la ventana
-            chartPanelXY.setPreferredSize(new java.awt.Dimension(800, 450));
-            setContentPane(chartPanelXY);
+            chartPanelX.setPreferredSize(new java.awt.Dimension(800, 450));
+            setContentPane(chartPanelX);
+        } else {
+            final XYSeries serieY = createSeriesY("Contaminacion");
+            final XYSeriesCollection data = new XYSeriesCollection(serieY);
+             final JFreeChart ventanaY = createChart(data, 3);
+            final ChartPanel chartPanelY = new ChartPanel(ventanaY);
+            // Asigna un tamano a la ventana
+            chartPanelY.setPreferredSize(new java.awt.Dimension(800, 450));
+            setContentPane(chartPanelY);
         }
     }
 
@@ -88,12 +96,15 @@ public class XYSeriesDemo extends ApplicationFrame {
             h = Integer.parseInt(alturaField.getText());
             masa = Integer.parseInt(MasaField.getText());
             final XYSeriesDemo tiempo = new XYSeriesDemo("Modelo Gauseano vs tiempo", 1);
-            final XYSeriesDemo yvsz = new XYSeriesDemo("Modelo Gauseano y vs z", 2);
+            final XYSeriesDemo yt = new XYSeriesDemo("Modelo Gauseano z", 2);
+            final XYSeriesDemo zt = new XYSeriesDemo("Modelo Gauseano y ", 3);
             tiempo.pack();
-            yvsz.pack();
+            yt.pack();
+            zt.pack();
             RefineryUtilities.centerFrameOnScreen(tiempo);
             tiempo.setVisible(true);
-            yvsz.setVisible(true);
+            yt.setVisible(true);
+            zt.setVisible(true);
         }
     }
 
@@ -111,6 +122,27 @@ public class XYSeriesDemo extends ApplicationFrame {
         double contaminacion = (q / (2 * Math.PI * u * v * dispercionX * dispercionY)) * (Math.pow(Math.E, -(Y * Y) / (2 * dispercionY * dispercionY)) * (Math.pow(Math.E, -((X - h) * (X - h)) / (2 * dispercionX * dispercionX))));
         return contaminacion;
     }
+    
+    private double calcularX(double i){
+        double dispercionX = 2 * k * x;
+        dispercionX /= u;
+        dispercionX = Math.pow(dispercionX, 0.5);
+        double q = masa * i; //indice de emision
+        double X = 300;
+        double contaminacion = (q*(Math.pow(Math.E, -((X) * (X)) / (2 * dispercionX * dispercionX))))/(Math.pow(2*Math.PI, 0.5)*u*h*dispercionX);
+        return contaminacion; 
+    }
+    
+    
+    private double calcularY(double i){
+        double dispercionY = 2 * k * y;
+        dispercionY /= v;
+        dispercionY = Math.pow(dispercionY, 0.5);
+        double q = masa * i; //indice de emision
+        double Y = 200;
+        double contaminacion =(q*(Math.pow(Math.E, -((Y) * (Y)) / (2 * dispercionY * dispercionY))))/(Math.pow(2*Math.PI, 0.5)*v*h*dispercionY);
+        return contaminacion; 
+    }
 
     /**
      *
@@ -124,6 +156,28 @@ public class XYSeriesDemo extends ApplicationFrame {
         double iterador = 0;
         for (double i = 0; i < 10; i += 0.3) {
             iterador = calcularValores(i);
+            System.out.println(iterador);
+            series.add(i, iterador);
+        }
+        return series;
+    }
+    
+    private XYSeries createSeriesX(String contaminacion) {
+        XYSeries series = new XYSeries(contaminacion);
+        double iterador = 0;
+        for (double i = 0; i < 10; i += 0.3) {
+            iterador = calcularX(i);
+            System.out.println(iterador);
+            series.add(i, iterador);
+        }
+        return series;
+    }
+    
+    private XYSeries createSeriesY(String contaminacion) {
+        XYSeries series = new XYSeries(contaminacion);
+        double iterador = 0;
+        for (double i = 0; i < 10; i += 0.3) {
+            iterador = calcularY(i);
             System.out.println(iterador);
             series.add(i, iterador);
         }
@@ -150,11 +204,23 @@ public class XYSeriesDemo extends ApplicationFrame {
                     true,
                     false
             );
-        } else {
+        } else if (caso == 2){
             chart = ChartFactory.createXYLineChart(
                     "Contaminacion del aire",
                     "Eje Y ( Altura )",
+                    "Tiempo",
+                    data,
+                    PlotOrientation.VERTICAL,
+                    true,
+                    true,
+                    false
+            );
+        }
+        else {
+            chart = ChartFactory.createXYLineChart(
+                    "Contaminacion del aire",                    
                     "Eje Z ( Profundidad )",
+                    "Tiempo",
                     data,
                     PlotOrientation.VERTICAL,
                     true,
